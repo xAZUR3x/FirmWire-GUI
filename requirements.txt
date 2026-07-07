@@ -1,0 +1,5 @@
+# GUI framework
+nicegui>=2.0.0
+
+# FirmWire dependencies
+-r firmwire/requirements.txt

@@ -1,0 +1,8 @@
+{
+  "name": "FirmWire GUI",
+  "build": {
+    "context": "..",
+    "dockerfile": "../Dockerfile"
+  },
+  "forwardPorts": [8080]
+}
