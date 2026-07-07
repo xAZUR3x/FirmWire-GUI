@@ -1,13 +1,13 @@
 from pathlib import Path
 from nicegui import app, ui
-from .runner import FirmWireRunner
+from .app_logic import FirmWireAppLogic
 
 URL = (
     "https://github.com/grant-h/ShannonFirmware/raw/master/modem_files/"
     "CP_G973FXXU3ASG8_CP13372649_CL16487963_QB24948473_REV01_user_low_ship.tar.md5.lz4"
 )
 
-runner = FirmWireRunner()
+fw_app_logic = FirmWireAppLogic()
 script_path = Path(__file__).resolve().parent.parent / "firmwire" / "firmwire.py"
 
 
@@ -17,7 +17,7 @@ def build_ui():
     with ui.column().classes("items-center gap-2"):
         ui.label("FirmWire GUI").classes("text-h4")
         status_label = ui.label("Status: Stopped").classes("text-h6")
-        line_count_label = ui.label("Log Lines: 0").classes("text-h6")
+        line_count_label = ui.label(f"Log Lines: 0").classes("text-h6")
 
         with ui.row().classes("items-center gap-2"):
             ui.button("Start", on_click=start_firmwire)
@@ -26,12 +26,12 @@ def build_ui():
 
     log_view = ui.textarea(value="", placeholder="Logs will appear here...").style("width: 100%; height: 600px;")
 
-    app.on_shutdown(runner.stop)
-    ui.timer(interval=0.1, callback=lambda: (runner.drain_output(), update_status()))
+    app.on_shutdown(fw_app_logic.stop)
+    ui.timer(interval=0.1, callback=lambda: (fw_app_logic.drain_output(), update_status()))
 
 
 def start_firmwire():
-    if not runner.start(script_path, URL):
+    if not fw_app_logic.start(script_path, URL):
         ui.notify("FirmWire is already running")
         return
 
@@ -40,7 +40,7 @@ def start_firmwire():
 
 
 def stop_firmwire():
-    if not runner.stop():
+    if not fw_app_logic.stop():
         ui.notify("FirmWire is not running")
         return
 
@@ -52,9 +52,9 @@ def update_status():
     if "status_label" not in globals() or "line_count_label" not in globals() or "log_view" not in globals():
         return
 
-    status_label.set_text(f"Status: {runner.get_status()}")
-    line_count_label.set_text(f"Log Lines: {runner.get_line_count()}")
-    log_view.set_value("\n".join(runner.get_log_lines()))
+    status_label.set_text(f"Status: {fw_app_logic.get_status()}")
+    line_count_label.set_text(f"Log Lines: {fw_app_logic.get_line_count()}")
+    log_view.set_value("\n".join(fw_app_logic.get_log_lines()))
 
 
 def main():
