@@ -27,7 +27,7 @@ def build_ui():
     log_view = ui.textarea(value="", placeholder="Logs will appear here...").style("width: 100%; height: 600px;")
 
     app.on_shutdown(fw_app_logic.stop)
-    ui.timer(interval=0.1, callback=lambda: (fw_app_logic.drain_output(), update_status()))
+    ui.timer(interval=0.1, callback=update_status)
 
 
 def start_firmwire():
@@ -54,7 +54,7 @@ def update_status():
 
     status_label.set_text(f"Status: {fw_app_logic.get_status()}")
     line_count_label.set_text(f"Log Lines: {fw_app_logic.get_line_count()}")
-    log_view.set_value("\n".join(fw_app_logic.get_log_lines()))
+    log_view.set_value("\n".join(fw_app_logic.ui_output()))
 
 
 def main():

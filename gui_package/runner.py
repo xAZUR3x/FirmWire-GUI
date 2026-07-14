@@ -7,26 +7,26 @@ from sys import executable as python_exe
 
 class FirmWireRunner:
     def __init__(self):
-        self.process = None
-        self.reader_thread = None
-        self._output_queue = Queue()
+        self._process = None
+        self._reader_thread = None
+        self._output = []
 
     def _read_process_output(self):
-        if self.process is None or self.process.stdout is None:
+        if self._process is None or self._process.stdout is None:
             return
 
-        for line in iter(self.process.stdout.readline, ""):
-            self._output_queue.put(line.rstrip("\n"))
+        for line in iter(self._process.stdout.readline, ""):
+            self._output.append(line.rstrip("\n"))
 
-        self.process.stdout.close()
+        self._process.stdout.close()
 
     def start(self, script_path, url):
-        if self.process is not None and self.process.poll() is None:
+        if self._process is not None and self._process.poll() is None:
             return False
 
-        self._output_queue.queue.clear()
+        self._output = []
 
-        self.process = Popen(
+        self._process = Popen(
             [python_exe, str(script_path), url],
             cwd=script_path.parent,
             stdout=PIPE,
@@ -35,25 +35,22 @@ class FirmWireRunner:
             bufsize=1,
         )
 
-        self.reader_thread = threading.Thread(
+        self._reader_thread = threading.Thread(
             target=self._read_process_output,
             daemon=True,
         )
-        self.reader_thread.start()
+        self._reader_thread.start()
         return True
 
     def stop(self):
-        if self.process is None or self.process.poll() is not None:
+        if self._process is None or self._process.poll() is not None:
             return False
 
-        self.process.send_signal(signal.SIGINT)
+        self._process.send_signal(signal.SIGINT)
         return True
 
-    def drain_output(self):
-        output = []
-        while not self._output_queue.empty():
-            output.append(self._output_queue.get_nowait())
-        return output
+    def get_output(self):
+        return self._output
 
     def is_running(self):
-        return self.process is not None and self.process.poll() is None
+        return self._process is not None and self._process.poll() is None
