@@ -1,2 +1,7 @@
 # Python
 __pycache__
+
+# Modem Files
+.md5
+.lz4
+.tar

@@ -1,6 +1,6 @@
 import signal
 import threading
-from queue import Queue
+import logging
 from subprocess import PIPE, STDOUT, Popen
 from sys import executable as python_exe
 
@@ -10,13 +10,19 @@ class FirmWireRunner:
         self._process = None
         self._reader_thread = None
         self._output = []
+        self._logger = logging.getLogger(f"{__name__}.FirmWireRunner")
+        self._logger.setLevel(logging.INFO)
+        self._logger.addHandler(logging.NullHandler())
+        self._logger.propagate = False
 
     def _read_process_output(self):
         if self._process is None or self._process.stdout is None:
             return
 
         for line in iter(self._process.stdout.readline, ""):
-            self._output.append(line.rstrip("\n"))
+            line_text = line.rstrip("\n")
+            self._output.append(line_text)
+            self._logger.info(line_text)
 
         self._process.stdout.close()
 
@@ -49,8 +55,14 @@ class FirmWireRunner:
         self._process.send_signal(signal.SIGINT)
         return True
 
-    def get_output(self):
+    def get_full_logs(self):
         return self._output
+    
+    def get_logger(self):
+        return self._logger
+    
+    def reset_output(self):
+        self._output = []
 
     def is_running(self):
         return self._process is not None and self._process.poll() is None
